@@ -29,8 +29,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          dvc remote modify remote access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          dvc remote modify remote secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          dvc remote modify s3 access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          dvc remote modify s3 secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           dvc pull data/features.parquet
 
       - name: Submit Job to Kubeflow Pipelines Cluster
