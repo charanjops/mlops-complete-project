@@ -1,19 +1,48 @@
-# argocd/application.yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: core-mlops-infrastructure
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: 'https://github.com'
-    targetRevision: HEAD
-    path: kserve/
-  destination:
-    server: 'https://default.svc'
-    namespace: ml-serving
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+# .github/workflows/pipeline.yaml
+name: MLOps Automation Pipeline
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-platform-lifecycle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Pull Data Version from DVC
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          dvc remote modify myremote access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          dvc remote modify myremote secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          dvc pull data/features.parquet
+
+      - name: Submit Job to Kubeflow Pipelines Cluster
+        run: |
+          python kubeflow/pipeline.py # Compiles DAG
+          python -c "import kfp; client = kfp.Client(host='${{ secrets.KUBEFLOW_URL }}'); client.create_run_from_pipeline_package('pipeline.yaml', arguments={})"
+
+      - name: Execute Model Performance and Drift Evaluation Gate
+        run: python src/validate.py
+
+      - name: Push Updates to GitOps Infrastructure Repo
+        if: success()
+        run: |
+          git clone https://${{ secrets.GITOPS_PAT }}@://github.com
+          cp kserve/inferenceservice.yaml ml-infra-gitops/kserve/
+          cd ml-infra-gitops
+          git config user.name "GitOps Automator"
+          git config user.email "gitops@enterprise.com"
+          git commit -am "chore: deploy latest validated production inference layout"
+          git push origin main

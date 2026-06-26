@@ -1,2 +1,13 @@
 mlops/
-data/
+# Data files
+data/*.csv
+data/*.parquet
+data/*.pkl
+
+# Keep DVC files
+!data/*.dvc
+
+# Models
+models/*.bin
+models/*.pkl
+!models/*.dvc

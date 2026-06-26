@@ -1,5 +1,5 @@
 project: user_churn_project
-registry: s3://my-mlops-bucket/feast/registry.pb
+registry: s3://kk364954-mlops-bucket/feast/registry.pb
 provider: aws
 offline_store:
   type: file

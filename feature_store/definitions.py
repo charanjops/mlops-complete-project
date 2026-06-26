@@ -6,7 +6,7 @@ from feast.types import Float32
 user_entity = Entity(name="user_id", value_type=ValueType.INT64)
 
 offline_source = FileSource(
-    path="s3://my-mlops-bucket/features/features.parquet",
+    path="s3://my-mlops-bucket/data/features.parquet",
     event_timestamp_column="event_timestamp",
 )
 
