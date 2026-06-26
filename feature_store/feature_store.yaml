@@ -1,0 +1,8 @@
+project: user_churn_project
+registry: s3://my-mlops-bucket/feast/registry.pb
+provider: aws
+offline_store:
+  type: file
+online_store:
+  type: redis
+  connection_string: redis://redis-cluster.ml-serving.svc.cluster.local:6379

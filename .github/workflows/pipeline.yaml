@@ -1,0 +1,19 @@
+# argocd/application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-mlops-infrastructure
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com'
+    targetRevision: HEAD
+    path: kserve/
+  destination:
+    server: 'https://default.svc'
+    namespace: ml-serving
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
